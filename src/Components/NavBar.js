@@ -6,7 +6,7 @@ export class NavBar extends Component {
     return (
       <nav className="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
         <div className="container-fluid">
-          <Link className="navbar-brand" to="/Home">
+          <Link className="navbar-brand" to="/General">
             New Monkey
           </Link>
           <button
