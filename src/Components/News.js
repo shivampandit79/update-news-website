@@ -1,8 +1,23 @@
 import React, { Component } from "react";
 import NewsList from "./NewsList";
+import Spinner from "./Spinner";
+import propTypes from 'prop-types';
 
 export class News extends Component {
- //  articles = 
+
+  static  defaultProps = {
+    country: 'in',
+    pageSize : 0,
+    category: 'general',
+  }
+
+  static propTypes = {
+    country: propTypes.string,
+    pageSize : propTypes.number,
+    category: propTypes.string,
+  }
+
+  //  articles =
   // [
   //   {
   //     "source": {
@@ -69,66 +84,106 @@ export class News extends Component {
   //     "publishedAt": "2024-05-08T13:02:12Z",
   //     "content": "Weve all seen them. The inspector with a clipboard, walking around a building, ticking off the last time the fire extinguishers were checked, or if all the lights are working. They work in the TICC (… [+3279 chars]"
   //   }
- //  ]
-  
-  constructor(){
+  //  ]
+
+  constructor() {
     super();
     console.log("this is a constructor class console output");
-    this.state ={
-      // articles: this.articles /// when use line lo 5 for no return empty data then use this line otherwise use second method 
-      articles : [],
-      page : 1
-    }
-
+    this.state = {
+      // articles: this.articles /// when use line lo 5 for no return empty data then use this line otherwise use second method
+      articles: [],
+      loading: false,
+      page: 1,
+    };
   }
 
-  async componentDidMount(){
-    let url ="https://newsapi.org/v2/top-headlines?country=us&category=business&apiKey=6a1a7dbdd41543a78540de840ccf3382&page=1&pageSize=20"
+  async componentDidMount() {
+    let url = `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&country=${this.props.country}&apiKey=${this.props.apikey}&page=1&pageSize=${this.props.pageSize}`;
+    this.setState({loading: true})
     let data = await fetch(url);
     let parsedData = await data.json();
-    this.setState({articles: parsedData.articles, totalResults: parsedData.totalResults})
+    this.setState({
+      articles: parsedData.articles,
+      totalResults: parsedData.totalResults,
+      loading: false
+    });
   }
 
-   handlepPrevClick = async ()=>{
-    console.log("this is a previus button ")
-    console.log("this is a next button")
-      let url =`https://newsapi.org/v2/top-headlines?country=us&category=business&apiKey=6a1a7dbdd41543a78540de840ccf3382&page=${this.state.page - 1}&pageSize=20`;
+  handlepPrevClick = async () => {
+    console.log("this is a previus button ");
+    console.log("this is a next button");
+    let url = `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&country=${this.props.country}&apiKey=6a1a7dbdd41543a78540de840ccf3382&page=${
+      this.state.page - 1
+    }&pageSize=${this.props.pageSize}`;
     let data = await fetch(url);
     let parsedData = await data.json();
     // this.setState({articles: parsedData.articles}) // remove line no 104 then work this
-      this.setState({
-        page: this.state.page - 1,
-        articles: parsedData.articles // remove line no 101 then work this line
-      })
-    }
+    this.setState({
+      page: this.state.page - 1,
+      articles: parsedData.articles, // remove line no 101 then work this line
+    });
+  };
 
-    handleNextClick = async ()=>{
-      console.log("this is a next button")
-      let url =`https://newsapi.org/v2/top-headlines?country=us&category=business&apiKey=6a1a7dbdd41543a78540de840ccf3382&page=${this.state.page + 1}&pageSize=20`;
-    let data = await fetch(url);
-    let parsedData = await data.json();
-    // this.setState({articles: parsedData.articles}) // remove line no 104 then work this
+  handleNextClick = async () => {
+    console.log("this is a next button");
+    if (!(this.state.page + 1 > Math.ceil(this.state.totalResults / this.props.pageSize))){
+      let url = `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&country=${this.props.country}&apiKey=6a1a7dbdd41543a78540de840ccf3382&page=${
+        this.state.page + 1
+      }&pageSize=${this.props.pageSize}`;
+      this.setState({loading: true})
+      let data = await fetch(url);
+      let parsedData = await data.json();
+       // this.setState({loading: false}) // when use line no loding: false line no 125 then comment this 
+      // this.setState({articles: parsedData.articles}) // remove line no 104 then work this
       this.setState({
         page: this.state.page + 1,
-        articles: parsedData.articles // remove line no 101 then work this line
-      })
-      
+        articles: parsedData.articles, // remove line no 101 then work this line
+        loading: false //  when use this.setState({loading: false}) line no 120 then comment this 
+      });
     }
+  };
 
   render() {
     return (
       <div className="container my-3">
-        <h2>News Monkey - Top HeadLines</h2>
-        <div className="row justify-content-center g-3  ">
-          {this.state.articles.map((element)=>{
-            return <div className="col-md-4">
-            <NewsList key={element.url} title={element.title} description={element.description} imgurl={element.urlToImage} newsUrl={element.url}/>
-          </div>
+        console.log("this is a newsJS")
+        <h2 className="text- mb-4 my-5">News Monkey - Top HeadLines</h2>
+        {this.state.loading && <Spinner/>}
+        <div className="row justify-content-center g-3">
+          {!this.state.loading && this.state.articles && this.state.articles.map((element) => {
+            return (
+              <div className="col-md-4">
+                <NewsList
+                  key={element.url}
+                  title={element.title}
+                  description={element.description}
+                  imgurl={element.urlToImage}
+                  newsUrl={element.url}
+                />
+              </div>
+            );
           })}
         </div>
         <div className="container d-flex justify-content-between">
-          <button disabled={this.state.page<=1} type="button" className="btn btn-dark" onClick={this.handlepPrevClick}>&larr; Previus</button>
-          <button disabled={this.state.page>=3} type="button" className="btn btn-dark" onClick={this.handleNextClick}>Next &rarr;</button>  
+          <button
+            disabled={this.state.page <= 1}
+            type="button"
+            className="btn btn-dark"
+            onClick={this.handlepPrevClick}
+          >
+            &larr; Previus
+          </button>
+          <button
+            disabled={
+              this.state.page + 1 >
+              Math.ceil(this.state.totalResults / this.props.pageSize)
+            }
+            type="button"
+            className="btn btn-dark"
+            onClick={this.handleNextClick}
+          >
+            Next &rarr;
+          </button>
         </div>
       </div>
     );
